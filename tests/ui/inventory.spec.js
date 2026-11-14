@@ -5,12 +5,12 @@ test.describe('Inventory Tests', () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     await expect(authenticatedPage).toHaveURL(/inventory\.html/);
   });
-  test('should display all products', async ({ inventoryPage }) => {
+  test('should display all products @smoke', async ({ inventoryPage }) => {
     const productsCount = await inventoryPage.getProductsCount();
     expect(productsCount).toBe(products.length);
   });
 
-  test('should add product to cart', async ({ inventoryPage }) => {
+  test('should add product to cart @smoke', async ({ inventoryPage }) => {
     const productName = products[0].name;
     await inventoryPage.addProductToCart(productName);
     const cartCount = await inventoryPage.getCartItemsCount();

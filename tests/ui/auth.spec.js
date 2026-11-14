@@ -6,7 +6,7 @@ test.describe('Authentication Tests', () => {
     await loginPage.goto();
   });
 
-  test('should login successfully with valid credentials', async ({ loginPage }) => {
+  test('should login successfully with valid credentials @smoke', async ({ loginPage }) => {
     await loginPage.login(validUsers[0].username, validUsers[0].password);
     await expect(loginPage.page).toHaveURL(/inventory\.html/);
   });

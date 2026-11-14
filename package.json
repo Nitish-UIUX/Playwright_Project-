@@ -8,6 +8,8 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:regression": "playwright test",
     "test:api": "playwright test tests/api",
     "test:ui-tests": "playwright test tests/ui",
     "test:api:chromium": "playwright test tests/api --project=chromium",
