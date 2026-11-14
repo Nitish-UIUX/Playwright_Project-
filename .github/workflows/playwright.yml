@@ -4,8 +4,10 @@ name: Playwright Tests
 on:
   push:
     branches: [main]
+
   pull_request:
     branches: [main]
+
   workflow_dispatch:
 
 jobs:
@@ -29,8 +31,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: npm test
+      - name: Run Smoke Tests
+        if: github.event_name == 'push'
+        run: npm run test:smoke
+
+      - name: Run Regression Tests
+        if: github.event_name != 'push'
+        run: npm run test:regression
 
       - name: Upload Playwright report
         if: always()
