@@ -219,6 +219,13 @@ npm run test:debug
 ```bash
 npm run test:ui
 ```
+## CI/CD Testing
+
+This project uses GitHub Actions for automated testing.
+
+- Smoke tests run on pushes to main.
+- Regression tests run on pull requests to main.
+- Manual workflow execution is also supported.
 
 ### View Traces
 Traces are automatically saved for failed tests and can be viewed:
