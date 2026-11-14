@@ -1,0 +1,34 @@
+{
+  "name": "playwright-test-framework",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Playwright test automation framework with Page Object Model",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:api": "playwright test tests/api",
+    "test:ui-tests": "playwright test tests/ui",
+    "test:api:chromium": "playwright test tests/api --project=chromium",
+    "test:ui:chromium": "playwright test tests/ui --project=chromium",
+    "test:auth": "playwright test tests/ui/auth.spec.js",
+    "test:inventory": "playwright test tests/ui/inventory.spec.js",
+    "test:checkout": "playwright test tests/ui/checkout.spec.js",
+    "report": "playwright show-report reports/html"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "automation",
+    "e2e"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.65.0"
+  },
+  "dependencies": {
+    "axios": "^1.13.0"
+  }
+}

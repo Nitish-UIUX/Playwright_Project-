@@ -1,0 +1,77 @@
+------------------------------------------------------Advanced Page Object Model---------------------------------------------------
+Now we'll improve the four page classes to make them reusable, maintainable, and scalable.
+
+// Review LoginPage.js 
+Open: 
+pages/LoginPage.js
+
+
+// Inventory Module 
+
+1. Display all products. 
+2. Verify product count.
+3. Add a single product to cart.
+4. Add multiple products to cart.
+5. Navigate to cart.
+6. Verify product information. 
+
+
+// Checkout Module 
+Open cart.
+1. Verify cart products.
+2. Proceed to checkout.
+3. Enter customer information.
+4. Complete checkout.
+5. Verify order confirmation.
+
+
+// API Testing with Playwright 
+
+API Testing
+1. Learning objectives
+By the end of this hour, you'll understand:
+1. API testing fundamentals.
+2. GET requests – retrieve data.
+3. POST requests – create data.
+4. PUT/PATCH requests – update data.
+5. DELETE requests – delete data.
+6. Response status codes and response validation.
+7. API request and response time validation.
+8. Reusable API client architecture.
+
+
+API environment 
+
+https://dummyjson.com
+
+DummyJSON provides sample REST API endpoints for learning and testing.
+HTTP method        	Endpoint	       Purpose
+GET	                /products	       Get all products
+GET	                /products/1	       Get one product
+POST	            /products/add	   Create product
+PUT	                /products/1	       Update product
+DELETE	            /products/1	       Delete product
+
+
+What we'll build
+Hour 5 target
+API testing implementation plan
+- [ ] GET – retrieve all products
+- [ ] GET – retrieve a single product
+- [ ] POST – create a product
+- [ ] PUT – update a product
+- [ ] DELETE – delete a product
+- [ ] Validate response status codes
+- [ ] Validate JSON response properties
+- [ ] Validate response time
+- [ ] Create reusable API client methods
+
+
+// API testing with Playwright
+currently , your API client uses Axios, Next, we'll learn Playwright's built-in APIREquestContext and understand;
+request.get()
+request.post()
+request.put()
+request.delete()
+API response status and body validation
+API testing without Axios
