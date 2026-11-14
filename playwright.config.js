@@ -10,18 +10,23 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  timeout: 30000, 
+  timeout: 30000,
 
   expect: {
     timeout: 5000
   },
 
-  reporter: [
-    ['html', { outputFolder: 'reports/html' }],
-    ['json', { outputFile: 'reports/results.json' }],
-    ['junit', { outputFile: 'reports/results.xml' }],
-    ['list']
-  ],
+  reporter: process.env.CI
+    ? [
+      ['blob', { outputDir: 'blob-report' }],
+      ['list']
+    ]
+    : [
+      ['html', { outputFolder: 'reports/html' }],
+      ['json', { outputFile: 'reports/results.json' }],
+      ['junit', { outputFile: 'reports/results.xml' }],
+      ['list']
+    ],
   use: {
     baseURL: envConfig.baseURL,
     headless: true,
