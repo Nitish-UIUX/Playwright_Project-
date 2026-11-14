@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Playwright Test Framework
 
 This is a comprehensive Playwright test automation framework built with the **Page Object Model (POM)** pattern.
@@ -244,3 +245,7 @@ When adding new tests:
 ## License
 
 ISC
+=======
+# Playwright_Project-
+Professional Playwright automation framework using JavaScript, Page Object Model, API testing, and reusable fixtures.
+>>>>>>> 0f97d307918e390ff3b6e5c6a4c0bfd623c57388
