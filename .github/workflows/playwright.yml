@@ -9,6 +9,12 @@ on:
     branches: [main]
 
   workflow_dispatch:
+    inputs:
+      test_slack_notification:
+        description: 'Send a test Slack notification'
+        required: false
+        type: boolean
+        default: false
 
   schedule:
     - cron: '0 1 * * *'
@@ -134,7 +140,7 @@ jobs:
     name: Notify Slack on Failure
     runs-on: ubuntu-latest
     needs: [test, merge-reports, deploy-pages]
-    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    if: ${{ always() && (contains(needs.*.result, 'failure') || inputs.test_slack_notification) }}
 
     steps:
       - name: Send Slack Failure Notification
