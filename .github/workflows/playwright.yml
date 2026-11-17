@@ -140,7 +140,7 @@ jobs:
     name: Notify Slack on Failure
     runs-on: ubuntu-latest
     needs: [test, merge-reports, deploy-pages]
-    if: ${{ always() && (contains(needs.*.result, 'failure') || inputs.test_slack_notification) }}
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
 
     steps:
       - name: Send Slack Failure Notification
