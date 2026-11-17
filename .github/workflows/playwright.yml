@@ -10,6 +10,15 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
   test:
     name: ${{ matrix.browser }} Tests
@@ -91,3 +100,29 @@ jobs:
           path: playwright-report/
           retention-days: 30
           if-no-files-found: ignore
+
+  deploy-pages:
+    name: Deploy Playwright Report
+    needs: [test, merge-reports]
+    if: needs.test.result == 'success' && needs.merge-reports.result == 'success'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Combined HTML Report
+        uses: actions/download-artifact@v6
+        with:
+          name: combined-playwright-report
+          path: playwright-report
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: playwright-report/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
