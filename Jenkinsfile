@@ -15,15 +15,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                echo 'Checking out Playwright project from GitHub'
-
-                git branch: 'main',
-                    url: 'https://github.com/Nitish-UIUX/Playwright_Project-.git'
-            }
-        }
-
         stage('Environment Setup') {
             steps {
                 bat 'node --version'
