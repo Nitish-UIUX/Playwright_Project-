@@ -19,7 +19,8 @@ export default defineConfig({
   reporter: process.env.CI
     ? [
       ['blob', { outputDir: 'blob-report' }],
-      ['list']
+      ['list'],
+      ['junit', { outputFile: 'reports/results.xml' }]
     ]
     : [
       ['html', { outputFolder: 'reports/html' }],
