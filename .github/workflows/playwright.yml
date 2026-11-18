@@ -140,7 +140,7 @@ jobs:
     name: Notify Slack on Failure
     runs-on: ubuntu-latest
     needs: [test, merge-reports, deploy-pages]
-    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    if: ${{ always() && (contains(needs.*.result, 'failure') || inputs.test_slack_notification) }}
 
     steps:
       - name: Send Slack Failure Notification
@@ -174,3 +174,38 @@ jobs:
             -H "Content-Type: application/json" \
             --data "$payload" \
             "$SLACK_WEBHOOK_URL"
+
+  pipeline-summary:
+    name: CI/CD Pipeline Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [test, merge-reports, deploy-pages, notify-slack]
+
+    steps:
+      - name: Generate Pipeline Summary
+        if: always()
+        env:
+          TEST_RESULT: ${{ needs.test.result }}
+          MERGE_RESULT: ${{ needs.merge-reports.result }}
+          DEPLOY_RESULT: ${{ needs.deploy-pages.result }}
+          SLACK_RESULT: ${{ needs.notify-slack.result }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+          EVENT: ${{ github.event_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "# Playwright CI/CD Pipeline Summary"
+            echo ""
+            echo "| Detail | Result |"
+            echo "|---|---|"
+            echo "| Branch | $BRANCH |"
+            echo "| Commit | $COMMIT |"
+            echo "| Trigger | $EVENT |"
+            echo "| Browser Tests | $TEST_RESULT |"
+            echo "| Report Merging | $MERGE_RESULT |"
+            echo "| Report Deployment | $DEPLOY_RESULT |"
+            echo "| Slack Notification Job | $SLACK_RESULT |"
+            echo ""
+            echo "[View GitHub Actions Run]($RUN_URL)"
+          } >> "$GITHUB_STEP_SUMMARY"
