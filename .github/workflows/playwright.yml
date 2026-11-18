@@ -72,6 +72,23 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+      - name: Save Browser Test Status
+        if: always()
+        env:
+          BROWSER: ${{ matrix.browser }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          mkdir -p browser-status
+          echo "$JOB_STATUS" > "browser-status/$BROWSER.txt"
+
+      - name: Upload Browser Test Status
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: browser-status-${{ matrix.browser }}
+          path: browser-status/
+          retention-days: 7
+
   merge-reports:
     name: Merge Playwright Reports
     if: always()
@@ -182,6 +199,14 @@ jobs:
     needs: [test, merge-reports, deploy-pages, notify-slack]
 
     steps:
+      - name: Download Browser Status Artifacts
+        if: always()
+        uses: actions/download-artifact@v6
+        with:
+          pattern: browser-status-*
+          path: browser-status
+          merge-multiple: true
+
       - name: Generate Pipeline Summary
         if: always()
         env:
@@ -196,6 +221,26 @@ jobs:
         run: |
           {
             echo "# Playwright CI/CD Pipeline Summary"
+            echo ""
+            echo "## Browser-wise Test Results"
+            echo ""
+            echo "| Browser | Result |"
+            echo "|---|---|"
+
+            for browser in chromium firefox webkit; do
+              STATUS_FILE="browser-status/${browser}.txt"
+
+              if [ -f "$STATUS_FILE" ]; then
+                STATUS=$(cat "$STATUS_FILE")
+              else
+                STATUS="not available"
+              fi
+
+              echo "| $browser | $STATUS |"
+            done
+
+            echo ""
+            echo "## Pipeline Details"
             echo ""
             echo "| Detail | Result |"
             echo "|---|---|"
