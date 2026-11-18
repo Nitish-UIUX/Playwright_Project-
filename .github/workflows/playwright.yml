@@ -89,6 +89,15 @@ jobs:
           path: browser-status/
           retention-days: 7
 
+      - name: Upload Failure Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-failure-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
   merge-reports:
     name: Merge Playwright Reports
     if: always()
