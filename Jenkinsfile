@@ -67,7 +67,9 @@ pipeline {
             ]) {
                 powershell '''
                     $reportPath = "reports/results.xml"
+
                     $failedTests = @()
+                    $browserResults = @()
 
                     $total = 0
                     $passed = 0
@@ -80,14 +82,50 @@ pipeline {
                             [xml]$report = Get-Content $reportPath -Raw
                             $root = $report.DocumentElement
 
+                            # Overall test results
                             $total = [int]$root.tests
                             $failed = [int]$root.failures + [int]$root.errors
                             $skipped = [int]$root.skipped
                             $passed = $total - $failed - $skipped
 
+                            # Test execution duration
                             $seconds = [double]$root.time
-                            $duration = [TimeSpan]::FromSeconds($seconds).ToString("hh\\:mm\\:ss")
+                            $duration = [TimeSpan]::FromSeconds(
+                                $seconds
+                            ).ToString("hh\\:mm\\:ss")
 
+                            # Browser-wise test results
+                            $browserGroups = $report.SelectNodes("//testsuite") |
+                                Group-Object {
+                                    $_.GetAttribute("hostname")
+                                }
+
+                            foreach ($browserGroup in $browserGroups) {
+                                $browserTotal = 0
+                                $browserFailures = 0
+                                $browserErrors = 0
+                                $browserSkipped = 0
+
+                                foreach ($suite in $browserGroup.Group) {
+                                    $browserTotal += [int]$suite.GetAttribute("tests")
+                                    $browserFailures += [int]$suite.GetAttribute("failures")
+                                    $browserErrors += [int]$suite.GetAttribute("errors")
+                                    $browserSkipped += [int]$suite.GetAttribute("skipped")
+                                }
+
+                                $browserFailed = $browserFailures + $browserErrors
+                                $browserPassed = $browserTotal - $browserFailed - $browserSkipped
+
+                                $browserResults += [PSCustomObject]@{
+                                    Browser = $browserGroup.Name
+                                    Total   = $browserTotal
+                                    Passed  = $browserPassed
+                                    Failed  = $browserFailed
+                                    Skipped = $browserSkipped
+                                }
+                            }
+
+                            # Failed test details
                             $testCases = $report.SelectNodes("//testcase")
 
                             foreach ($testCase in $testCases) {
@@ -108,7 +146,7 @@ pipeline {
                                     }
 
                                     $failedTests += [PSCustomObject]@{
-                                        Name = $testCase.name
+                                        Name  = $testCase.name
                                         Error = $errorMessage
                                     }
                                 }
@@ -122,6 +160,7 @@ pipeline {
                         Write-Warning "Playwright XML report not found."
                     }
 
+                    # Build status
                     $status = $env:BUILD_RESULT
 
                     $emoji = if ($status -eq "SUCCESS") {
@@ -130,15 +169,44 @@ pipeline {
                         ":rotating_light:"
                     }
 
+                    # Main Slack message
                     $message = "$emoji *Playwright CI - $status*`n"
                     $message += "*Job:* $env:JOB_NAME`n"
                     $message += "*Build:* #$env:BUILD_NUMBER`n"
-                    $message += "*Total tests:* $total`n"
-                    $message += "*Passed:* $passed | *Failed:* $failed | *Skipped:* $skipped`n"
-                    $message += "*Test duration:* $duration`n"
+
+                    if (Test-Path $reportPath) {
+                        $message += "*Total tests:* $total`n"
+                        $message += "*Passed:* $passed | *Failed:* $failed | *Skipped:* $skipped`n"
+
+                        # Browser-wise summary
+                        if ($browserResults.Count -gt 0) {
+                            $message += "`n*Browser-wise results:*`n"
+
+                            foreach ($browser in $browserResults) {
+                                $browserName = (
+                                    Get-Culture
+                                ).TextInfo.ToTitleCase($browser.Browser)
+
+                                $message += "• *$browserName:* "
+                                $message += "$($browser.Total) total | "
+                                $message += "$($browser.Passed) passed | "
+                                $message += "$($browser.Failed) failed | "
+                                $message += "$($browser.Skipped) skipped`n"
+                            }
+                        }
+                        else {
+                            $message += "`n*Browser-wise results:* Not available`n"
+                        }
+                    }
+                    else {
+                        $message += "*Test results:* Report not available`n"
+                    }
+
+                    $message += "`n*Test duration:* $duration`n"
                     $message += "*Build duration:* $env:BUILD_DURATION`n"
                     $message += "*Build URL:* $env:BUILD_URL"
 
+                    # Failed test details
                     if ($failedTests.Count -gt 0) {
                         $message += "`n`n*Failed test details:*"
 
@@ -157,6 +225,7 @@ pipeline {
                         }
                     }
 
+                    # Send Slack notification
                     $payload = @{
                         text = $message
                     } | ConvertTo-Json -Depth 10 -Compress
