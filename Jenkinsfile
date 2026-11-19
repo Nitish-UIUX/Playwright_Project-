@@ -41,6 +41,8 @@ pipeline {
         }
     }
 
+
+
     post {
         always {
             echo 'Publishing test results and artifacts'
@@ -61,7 +63,34 @@ pipeline {
         }
 
         failure {
-            echo 'Playwright pipeline failed. Check the console output and artifacts.'
+            echo 'Playwright pipeline failed. Sending Slack notification...'
+
+            withCredentials([
+                string(
+                    credentialsId: 'slack-webhook',
+                    variable: 'SLACK_WEBHOOK_URL'
+                )
+            ]) {
+                powershell '''
+                    $payload = @{
+                        text = "🚨 Playwright Tests Failed!`nJob: $env:JOB_NAME`nBuild: #$env:BUILD_NUMBER`nDetails: $env:BUILD_URL"
+                    } | ConvertTo-Json
+
+                    try {
+                        Invoke-RestMethod `
+                            -Uri $env:SLACK_WEBHOOK_URL `
+                            -Method Post `
+                            -ContentType "application/json" `
+                            -Body $payload
+
+                        Write-Host "Slack notification sent successfully."
+                    }
+                    catch {
+                        Write-Host "Slack notification failed: $($_.Exception.Message)"
+                    }
+                '''
+            }
         }
     }
+
 }
