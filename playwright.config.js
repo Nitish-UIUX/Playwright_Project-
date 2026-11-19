@@ -17,13 +17,20 @@ export default defineConfig({
   },
 
   reporter: process.env.CI
-    ? [
+  ? [
+      ['html', {
+        outputFolder: 'reports/html',
+        open: 'never'
+      }],
       ['blob', { outputDir: 'blob-report' }],
       ['list'],
       ['junit', { outputFile: 'reports/results.xml' }]
     ]
-    : [
-      ['html', { outputFolder: 'reports/html' }],
+  : [
+      ['html', {
+        outputFolder: 'reports/html',
+        open: 'never'
+      }],
       ['json', { outputFile: 'reports/results.json' }],
       ['junit', { outputFile: 'reports/results.xml' }],
       ['list']
