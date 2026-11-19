@@ -66,61 +66,64 @@ pipeline {
                 )
             ]) {
                 powershell '''
-                    $reportPath = "reports/results.json"
+                    $reportPath = "reports/results.xml"
                     $failedTests = @()
 
+                    $total = 0
                     $passed = 0
                     $failed = 0
                     $skipped = 0
-                    $flaky = 0
+                    $duration = "Not available"
 
                     if (Test-Path $reportPath) {
-                        $report = Get-Content $reportPath -Raw |
-                            ConvertFrom-Json
+                        try {
+                            [xml]$report = Get-Content $reportPath -Raw
+                            $root = $report.DocumentElement
 
-                        $passed = $report.stats.expected
-                        $failed = $report.stats.unexpected
-                        $skipped = $report.stats.skipped
-                        $flaky = $report.stats.flaky
+                            $total = [int]$root.tests
+                            $failed = [int]$root.failures + [int]$root.errors
+                            $skipped = [int]$root.skipped
+                            $passed = $total - $failed - $skipped
 
-                        function Get-FailedTests($suite) {
-                            foreach ($spec in $suite.specs) {
-                                foreach ($test in $spec.tests) {
-                                    if ($test.status -eq "unexpected") {
-                                        $errorMessage = "No error details available."
+                            $seconds = [double]$root.time
+                            $duration = [TimeSpan]::FromSeconds($seconds).ToString("hh\\:mm\\:ss")
 
-                                        if ($test.results.Count -gt 0) {
-                                            $lastResult = $test.results[-1]
+                            $testCases = $report.SelectNodes("//testcase")
 
-                                            if ($lastResult.errors.Count -gt 0) {
-                                                $errorMessage = $lastResult.errors[0].message
-                                            }
-                                        }
+                            foreach ($testCase in $testCases) {
+                                $failureNode = $testCase.SelectSingleNode("failure")
+                                $errorNode = $testCase.SelectSingleNode("error")
 
-                                        $script:failedTests += [PSCustomObject]@{
-                                            Name = $spec.title
-                                            Error = $errorMessage
-                                        }
+                                if ($failureNode -or $errorNode) {
+                                    $failureDetail = if ($failureNode) {
+                                        $failureNode
+                                    } else {
+                                        $errorNode
+                                    }
+
+                                    $errorMessage = $failureDetail.message
+
+                                    if ([string]::IsNullOrWhiteSpace($errorMessage)) {
+                                        $errorMessage = $failureDetail.InnerText
+                                    }
+
+                                    $failedTests += [PSCustomObject]@{
+                                        Name = $testCase.name
+                                        Error = $errorMessage
                                     }
                                 }
                             }
-
-                            foreach ($childSuite in $suite.suites) {
-                                Get-FailedTests $childSuite
-                            }
                         }
-
-                        foreach ($suite in $report.suites) {
-                            Get-FailedTests $suite
+                        catch {
+                            Write-Warning "Could not parse Playwright XML report: $($_.Exception.Message)"
                         }
                     }
                     else {
-                        Write-Warning "Playwright JSON report not found."
+                        Write-Warning "Playwright XML report not found."
                     }
 
-                    $total = $passed + $failed + $skipped + $flaky
-
                     $status = $env:BUILD_RESULT
+
                     $emoji = if ($status -eq "SUCCESS") {
                         ":white_check_mark:"
                     } else {
@@ -131,8 +134,9 @@ pipeline {
                     $message += "*Job:* $env:JOB_NAME`n"
                     $message += "*Build:* #$env:BUILD_NUMBER`n"
                     $message += "*Total tests:* $total`n"
-                    $message += "*Passed:* $passed | *Failed:* $failed | *Skipped:* $skipped | *Flaky:* $flaky`n"
-                    $message += "*Duration:* $env:BUILD_DURATION`n"
+                    $message += "*Passed:* $passed | *Failed:* $failed | *Skipped:* $skipped`n"
+                    $message += "*Test duration:* $duration`n"
+                    $message += "*Build duration:* $env:BUILD_DURATION`n"
                     $message += "*Build URL:* $env:BUILD_URL"
 
                     if ($failedTests.Count -gt 0) {
@@ -179,6 +183,10 @@ pipeline {
 
         failure {
             echo 'Playwright pipeline failed. Check test results and Slack notification.'
+        }
+
+        aborted {
+            echo 'Playwright pipeline was aborted.'
         }
     }
 }
