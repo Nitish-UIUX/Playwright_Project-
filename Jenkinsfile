@@ -39,8 +39,14 @@ pipeline {
                 bat 'npm run test:regression'
             }
         }
+
+        stage('Test Slack Notification') {
+            steps {
+                error('Intentional failure to test Slack notification')
+            }
+        }
     }
-    
+
     post {
         always {
             echo 'Publishing test results and artifacts'
