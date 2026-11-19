@@ -42,15 +42,28 @@ pipeline {
         always {
             echo 'Publishing Playwright test results and artifacts'
 
+            // Publish JUnit test results
             junit(
                 testResults: 'reports/results.xml',
                 allowEmptyResults: true
             )
 
+            // Archive reports and test artifacts
             archiveArtifacts(
                 artifacts: 'reports/**, test-results/**',
                 allowEmptyArchive: true
             )
+
+            // Publish Playwright HTML Report
+            publishHTML(target: [
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'reports/html',
+                reportFiles: 'index.html',
+                reportName: 'Playwright HTML Report',
+                reportTitles: 'Playwright Test Report'
+            ])
 
             script {
                 env.BUILD_RESULT = currentBuild.currentResult
@@ -59,6 +72,7 @@ pipeline {
 
             echo 'Sending Slack notification...'
 
+            // Slack notification
             withCredentials([
                 string(
                     credentialsId: 'slack-webhook',
