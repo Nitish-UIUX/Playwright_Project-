@@ -187,7 +187,7 @@ pipeline {
                                     Get-Culture
                                 ).TextInfo.ToTitleCase($browser.Browser)
 
-                                $message += "• *$browserName:* "
+                                $message += "• *${browserName}:* "
                                 $message += "$($browser.Total) total | "
                                 $message += "$($browser.Passed) passed | "
                                 $message += "$($browser.Failed) failed | "
