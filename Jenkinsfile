@@ -16,6 +16,7 @@ pipeline {
             steps {
                 bat 'node --version'
                 bat 'npm --version'
+                bat 'echo CI=%CI%'
             }
         }
 
@@ -33,6 +34,7 @@ pipeline {
 
         stage('Run Playwright Tests') {
             steps {
+                bat 'node -e "console.log(\'CI environment:\', process.env.CI)"'
                 bat 'npm run test:regression'
             }
         }
