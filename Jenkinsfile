@@ -40,9 +40,7 @@ pipeline {
             }
         }
     }
-
-
-
+    
     post {
         always {
             echo 'Publishing test results and artifacts'
@@ -74,7 +72,7 @@ pipeline {
                 powershell '''
                     $payload = @{
                         text = "🚨 Playwright Tests Failed!`nJob: $env:JOB_NAME`nBuild: #$env:BUILD_NUMBER`nDetails: $env:BUILD_URL"
-                    } | ConvertTo-Json
+                    } | ConvertTo-Json -Compress
 
                     try {
                         Invoke-RestMethod `
@@ -86,11 +84,13 @@ pipeline {
                         Write-Host "Slack notification sent successfully."
                     }
                     catch {
-                        Write-Host "Slack notification failed: $($_.Exception.Message)"
+                        Write-Error "Slack notification failed: $($_.Exception.Message)"
+                        exit 1
                     }
                 '''
             }
         }
     }
+
 
 }
