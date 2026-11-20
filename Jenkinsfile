@@ -132,8 +132,16 @@ pipeline {
                                 $browserFailed = $browserFailures + $browserErrors
                                 $browserPassed = $browserTotal - $browserFailed - $browserSkipped
 
+                                # Normalize browser names
+                                $browserName = switch ($browserGroup.Name.ToLower()) {
+                                    "chromium" { "Chromium" }
+                                    "firefox"  { "Firefox" }
+                                    "webkit"   { "WebKit" }
+                                    default    { $browserGroup.Name }
+                                }
+
                                 $browserResults += [PSCustomObject]@{
-                                    Browser = $browserGroup.Name
+                                    Browser = $browserName
                                     Total   = $browserTotal
                                     Passed  = $browserPassed
                                     Failed  = $browserFailed
@@ -198,12 +206,19 @@ pipeline {
                         if ($browserResults.Count -gt 0) {
                             $message += "`n*Browser-wise results:*`n"
 
-                            foreach ($browser in $browserResults) {
-                                $browserName = (
-                                    Get-Culture
-                                ).TextInfo.ToTitleCase($browser.Browser)
+                            # Keep browser order consistent
+                            $browserOrder = @("Chromium", "Firefox", "WebKit")
 
-                                $message += "• *${browserName}:* "
+                            foreach ($browserName in $browserOrder) {
+                                $browser = $browserResults |
+                                    Where-Object { $_.Browser -eq $browserName } |
+                                    Select-Object -First 1
+
+                                if ($null -eq $browser) {
+                                    continue
+                                }
+
+                                $message += "• *$($browser.Browser):* "
                                 $message += "$($browser.Total) total | "
                                 $message += "$($browser.Passed) passed | "
                                 $message += "$($browser.Failed) failed | "
