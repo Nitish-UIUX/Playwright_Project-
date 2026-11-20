@@ -257,5 +257,3 @@ ISC
 Professional Playwright automation framework using JavaScript, Page Object Model, API testing, and reusable fixtures.
 >>>>>>> 0f97d307918e390ff3b6e5c6a4c0bfd623c57388
 ## Jenkins CI Integration
-
-This project supports automated Playwright test execution through Jenkins.
