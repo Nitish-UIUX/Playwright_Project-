@@ -18,7 +18,6 @@ test.describe('Playwright API Testing', () => {
     expect(Array.isArray(responseBody.products)).toBeTruthy();
     expect(responseBody.products.length).toBeGreaterThan(0);
     expect(responseBody.total).toBeGreaterThan(0);
-    expect(response.status()).toBe(999);
 
     console.log('Total products:', responseBody.total);
     console.log('First product:', responseBody.products[0].title);
