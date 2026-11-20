@@ -169,9 +169,29 @@ pipeline {
                                         $errorMessage = $failureDetail.InnerText
                                     }
 
+                                    # The JUnit XML stores the browser on the testcase's parent testsuite.
+                                    $browserName = $testCase.ParentNode.GetAttribute("hostname")
+
+                                    if ([string]::IsNullOrWhiteSpace($browserName)) {
+                                        $browserName = "Unknown"
+                                    }
+                                    else {
+                                        $browserName = switch ($browserName.ToLower()) {
+                                            "chromium" { "Chromium" }
+                                            "firefox"  { "Firefox" }
+                                            "webkit"   { "WebKit" }
+                                            default    { $browserName }
+                                        }
+                                    }
+
+                                    if ([string]::IsNullOrWhiteSpace($errorMessage)) {
+                                        $errorMessage = "No error message was provided in the JUnit report."
+                                    }
+
                                     $failedTests += [PSCustomObject]@{
-                                        Name  = $testCase.name
-                                        Error = $errorMessage
+                                        Browser = $browserName
+                                        Name    = $testCase.name
+                                        Error   = $errorMessage
                                     }
                                 }
                             }
@@ -242,13 +262,13 @@ pipeline {
                         $message += "`n`n*Failed test details:*"
 
                         foreach ($item in ($failedTests | Select-Object -First 5)) {
-                            $errorText = $item.Error
+                            $errorText = [string]$item.Error
 
                             if ($errorText.Length -gt 400) {
                                 $errorText = $errorText.Substring(0, 400) + "..."
                             }
 
-                            $message += "`n• *$($item.Name)*`n  $errorText"
+                            $message += "`n• *[$($item.Browser)] $($item.Name)*`n  $errorText"
                         }
 
                         if ($failedTests.Count -gt 5) {
